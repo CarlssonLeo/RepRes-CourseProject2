@@ -1,0 +1,58 @@
+---
+title: "Impact of natural disasters in the US on human health and economy"
+output: html_document
+---
+## Synopsis
+This analysis uses NOAA Storm Database to explore which natural events has the greatest impact on human health in the form of deaths and injuries, and on economy in form of property and crop damages.The analysis summarises the events by type and takes the total of the relevant factors, and then produces a bar plot showing the six events with the greatest impact in the US. 
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+## Data Processing
+The data is downloaded from the internet, and then read into a data frame.
+```{r data processing}
+library(tidyverse)
+download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2", destfile = "./StormData.csv.bz2")
+storm_data <- read.csv("StormData.csv.bz2")
+
+```
+
+This dataframe is then used to create the first of two new data frames. It takes the storm data, groups it by event type, and collapses it down to the sum of fatalities and injuries for each event, and sorts in descenting order. The top 6 is then extracted. 
+```{r PopHealth}
+PopHealth <- storm_data %>% 
+        group_by(Event = EVTYPE) %>%
+        summarise(Fatalaties = sum(FATALITIES+INJURIES)) %>%
+        arrange(desc(Fatalaties))
+
+Top6_Pophealth <- head(PopHealth)
+```
+
+Much the same is the creation of the second data frame, but here instead it takes the sum of crop damage and property damage.
+```{r EconImpact}
+EconImpact <- storm_data %>% 
+        group_by(Event = EVTYPE) %>%
+        summarise(Damages = sum(CROPDMG+PROPDMG)) %>%
+        arrange(desc(Damages))
+
+Top6_EconImpact <- head(EconImpact)
+```
+
+## Results
+The above processed data can be used to answer the questions, which event has the greatest impact on humans and economy.
+
+```{r pop health}
+ggplot(Top6_Pophealth, aes(Event, Fatalaties, fill = Event))+
+        geom_bar(stat="identity")+
+        ggtitle("Top 6 most dangerous natural events")
+```
+  
+As we can see in the above plot, Tornadoes have the greatest impact on population health in the total sum of fatalities and injuries, haveing a total injuries and deaths far exceeding the others. 
+
+```{r econ impact}
+ggplot(Top6_EconImpact, aes(Event, Damages, fill = Event))+
+        geom_bar(stat="identity")+
+        ggtitle("Top 6 most damaging natural events")
+```
+  
+The same is true for the impact on the economy, tornadoes seem to far outdamage all other events. 
